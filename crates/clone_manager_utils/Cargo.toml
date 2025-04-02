@@ -1,0 +1,15 @@
+[package]
+name = "clone_manager_utils"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+anyhow = "1"
+serde_yaml = "0.9"
+log = "0.4"
+
+holochain_client = "0.6"
+hdk = "0.4"
+holochain_types = "0.4"
+
+clone_manager_types = { path = "../clone_manager_types" }
