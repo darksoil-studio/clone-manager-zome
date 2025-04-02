@@ -1,0 +1,28 @@
+---
+manifest_version: "1"
+name: clone_manager_test
+integrity:
+  network_seed: ~
+  properties: ~
+  origin_time: 1676140846503210
+  zomes:
+    - name: clone_manager_integrity
+      hash: ~
+      bundled: "../target/wasm32-unknown-unknown/release/clone_manager_integrity.wasm"
+      dependencies: ~    
+    - name: profiles_integrity
+      hash: ~
+      bundled: <NIX PACKAGE>
+      dependencies: ~
+coordinator:
+  zomes:
+    - name: clone_manager
+      hash: ~
+      bundled: "../target/wasm32-unknown-unknown/release/clone_manager.wasm"
+      dependencies:
+        - name: clone_manager_integrity    
+    - name: profiles
+      hash: ~
+      bundled: <NIX PACKAGE>
+      dependencies:
+        - name: profiles_integrity

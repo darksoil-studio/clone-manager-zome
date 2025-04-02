@@ -1,0 +1,15 @@
+[package]
+name = "clone_manager"
+version = "0.0.1"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+name = "clone_manager"
+
+[dependencies]
+hdk = { workspace = true }
+
+serde = { workspace = true }
+
+clone_manager_integrity = { path = "../../integrity/clone_manager", package = "clone_manager_integrity" }
