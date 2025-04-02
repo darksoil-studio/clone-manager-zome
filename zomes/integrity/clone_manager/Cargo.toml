@@ -11,3 +11,5 @@ name = "clone_manager_integrity"
 hdi = { workspace = true }
 
 serde = { workspace = true }
+
+clone_manager_types = { path = "../../../crates/clone_manager_types" }

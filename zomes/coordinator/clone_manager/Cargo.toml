@@ -13,3 +13,4 @@ hdk = { workspace = true }
 serde = { workspace = true }
 
 clone_manager_integrity = { path = "../../integrity/clone_manager", package = "clone_manager_integrity" }
+clone_manager_types = { path = "../../../crates/clone_manager_types" }

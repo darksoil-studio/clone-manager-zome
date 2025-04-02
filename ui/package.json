@@ -13,7 +13,11 @@
   "main": "dist/index.js",
   "module": "dist/index.js",
   "types": "dist/index.d.ts",
-  "files": ["dist", "locales", "src"],
+  "files": [
+    "dist",
+    "locales",
+    "src"
+  ],
   "repository": {
     "type": "git",
     "url": "git+https://github.com/darksoil-studio/clone-manager-zome.git"
@@ -37,7 +41,6 @@
     "lit": "^3.0.0"
   },
   "devDependencies": {
-    "@darksoil-studio/profiles-zome": "*-rev.*",
     "@custom-elements-manifest/analyzer": "^0.10.3",
     "@lit/localize-tools": "^0.6.3",
     "typescript": "^5.4.5",
