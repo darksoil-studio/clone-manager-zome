@@ -129,12 +129,16 @@ pub async fn clone_cell(
         })
         .find(|cloned| cloned.dna_modifiers.eq(&clone_request.dna_modifiers));
 
-    let cell_to_enable = if let Some(existing_cell) = existing_cell {
-        if existing_cell.enabled {
+    if let Some(existing_cell) = existing_cell {
+        if !existing_cell.enabled {
+            app_ws
+                .enable_clone_cell(EnableCloneCellPayload {
+                    clone_cell_id: CloneCellId::CloneId(existing_cell.clone_id.clone()),
+                })
+                .await?;
+        } else {
             log::info!("Cell is already enabled: doing nothing.");
-            return Ok(());
         }
-        existing_cell
     } else {
         let cloned_cell = app_ws
             .create_clone_cell(CreateCloneCellPayload {
@@ -149,30 +153,28 @@ pub async fn clone_cell(
                 name: None,
             })
             .await?;
-        cloned_cell
-    };
-    app_ws
-        .enable_clone_cell(EnableCloneCellPayload {
-            clone_cell_id: CloneCellId::CloneId(cell_to_enable.clone_id.clone()),
-        })
-        .await?;
-
-    let dna_def = admin_ws
-        .get_dna_definition(cell_to_enable.cell_id.dna_hash().clone())
-        .await?;
-
-    if let Some((first_zome, _)) = dna_def.coordinator_zomes.first() {
         app_ws
-            .call_zome(
-                ZomeCallTarget::CellId(cell_to_enable.cell_id.clone()),
-                first_zome.clone(),
-                "init".into(),
-                ExternIO::encode(())?,
-            )
+            .enable_clone_cell(EnableCloneCellPayload {
+                clone_cell_id: CloneCellId::CloneId(cloned_cell.clone_id.clone()),
+            })
             .await?;
+
+        let dna_def = admin_ws
+            .get_dna_definition(cloned_cell.cell_id.dna_hash().clone())
+            .await?;
+
+        if let Some((first_zome, _)) = dna_def.coordinator_zomes.first() {
+            app_ws
+                .call_zome(
+                    ZomeCallTarget::CellId(cloned_cell.cell_id.clone()),
+                    first_zome.clone(),
+                    "init".into(),
+                    ExternIO::encode(())?,
+                )
+                .await?;
+        }
+
+        log::info!("New cloned cell: {cloned_cell:?}.");
     }
-
-    log::info!("New cloned cell: {cell_to_enable:?}.");
-
     Ok(())
 }
