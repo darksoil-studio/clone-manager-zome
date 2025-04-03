@@ -1,11 +1,18 @@
-use hdk::prelude::*;
 use clone_manager_integrity::*;
 use clone_manager_types::NewCloneRequest;
+use hdk::prelude::*;
 
 pub mod all_clone_requests;
-pub mod clone_request;
 pub mod clone_providers;
-use clone_providers::get_clone_providers;
+pub mod clone_request;
+use clone_providers::{announce_as_provider, get_clone_providers};
+
+fn i_am_provider() -> bool {
+    match option_env!("CLONE_PROVIDER") {
+        Some("1") | Some("true") => true,
+        _ => false,
+    }
+}
 
 #[hdk_extern]
 pub fn init(_: ()) -> ExternResult<InitCallbackResult> {
@@ -18,6 +25,10 @@ pub fn init(_: ()) -> ExternResult<InitCallbackResult> {
         functions,
     };
     create_cap_grant(cap_grant)?;
+
+    if i_am_provider() {
+        announce_as_provider(())?;
+    }
 
     Ok(InitCallbackResult::Pass)
 }
@@ -71,9 +82,7 @@ fn signal_action(action: SignedActionHashed) -> ExternResult<()> {
                 match &app_entry {
                     EntryTypes::CloneRequest(clone_request) => {
                         let providers = get_clone_providers(())?;
-                        info!(
-                            "New CloneRequest created: sending to providers: {providers:?}."
-                        );
+                        info!("New CloneRequest created: sending to providers: {providers:?}.");
                         send_remote_signal(
                             NewCloneRequest {
                                 clone_request: clone_request.clone(),

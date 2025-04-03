@@ -30,6 +30,7 @@
         # Just for testing purposes
         ./workdir/dna.nix
         ./workdir/happ.nix
+        inputs.tnesh-stack.outputs.flakeModules.builders
       ];
 
       systems = builtins.attrNames inputs.holonix.devShells;
