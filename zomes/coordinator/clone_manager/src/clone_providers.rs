@@ -24,15 +24,18 @@ pub fn announce_as_provider() -> ExternResult<()> {
         (),
     )?;
 
-    let functions = GrantedFunctions::Listed(BTreeSet::from([(
-        zome_info()?.name,
-        FunctionName::from("available_as_provider"),
-    )]));
+    let functions = GrantedFunctions::Listed(BTreeSet::from([
+        (
+            zome_info()?.name,
+            FunctionName::from("available_as_provider"),
+        ),
+        (zome_info()?.name, FunctionName::from("recv_remote_signal")),
+    ]));
 
     create_cap_grant(CapGrantEntry {
-        tag: "".into(),
+        tag: "clone_manager_provider".into(),
         // empty access converts to unrestricted
-        access: ().into(),
+        access: CapAccess::Unrestricted,
         functions,
     })?;
 
