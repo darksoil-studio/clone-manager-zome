@@ -1,5 +1,5 @@
-use hdk::prelude::*;
 use clone_manager_integrity::LinkTypes;
+use hdk::prelude::*;
 
 fn all_providers_path() -> Path {
     Path::from(format!("all_providers"))
@@ -8,10 +8,11 @@ fn all_providers_path() -> Path {
 #[hdk_extern]
 pub fn announce_as_provider() -> ExternResult<()> {
     let agent_info = agent_info()?;
+    let dna_info = dna_info()?;
 
     info!(
-        "Announcing as a provider with pub key {}.",
-        agent_info.agent_latest_pubkey
+        "Announcing as a clone manager provider of dna {} with pub key {}.",
+        dna_info.hash, agent_info.agent_latest_pubkey
     );
 
     let path = all_providers_path();
