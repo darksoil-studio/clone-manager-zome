@@ -32,6 +32,11 @@ pub async fn reconcile_cloned_cells(
         return Err(anyhow!("App is not installed."));
     };
 
+    log::info!(
+        "Reconciling cloned cells. Current clone requests: {:?}",
+        clone_requests
+    );
+
     let cloned_cells: Vec<ClonedCell> = app_info
         .cell_info
         .get(&role_to_clone)
@@ -77,8 +82,8 @@ pub async fn reconcile_cloned_cells(
             .is_none()
         {
             log::info!(
-                "CloneRequest for role {} and DNA hash {} does not longer exist. Disabling the cell.",
-                role_to_clone, cloned_cell.cell_id.dna_hash()
+                "CloneRequest for role {} with DNA hash {} and modifiers {:?} does not longer exist. Disabling the cell.",
+                role_to_clone, cloned_cell.cell_id.dna_hash(), cloned_cell.dna_modifiers
             );
             app_ws
                 .disable_clone_cell(DisableCloneCellPayload {
