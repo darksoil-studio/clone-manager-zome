@@ -76,6 +76,10 @@ pub async fn reconcile_cloned_cells(
             .find(|clone_request| clone_request.dna_modifiers.eq(&cloned_cell.dna_modifiers))
             .is_none()
         {
+            log::info!(
+                "CloneRequest for role {} and DNA hash {} does not longer exist. Disabling the cell.",
+                role_to_clone, cloned_cell.cell_id.dna_hash()
+            );
             app_ws
                 .disable_clone_cell(DisableCloneCellPayload {
                     clone_cell_id: CloneCellId::CloneId(cloned_cell.clone_id),
