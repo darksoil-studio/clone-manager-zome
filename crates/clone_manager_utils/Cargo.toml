@@ -8,8 +8,8 @@ anyhow = "1"
 serde_yaml = "0.9"
 log = "0.4"
 
-holochain_client = "0.6"
-hdk = "0.4"
-holochain_types = "0.4"
+holochain_client = "0.7"
+hdk = "0.5"
+holochain_types = "0.5"
 
 clone_manager_types = { path = "../clone_manager_types" }

@@ -12,14 +12,14 @@ pub fn announce_as_provider() -> ExternResult<()> {
 
     info!(
         "Announcing as a clone manager provider of dna {} with pub key {}.",
-        dna_info.hash, agent_info.agent_latest_pubkey
+        dna_info.hash, agent_info.agent_initial_pubkey
     );
 
     let path = all_providers_path();
 
     create_link(
         path.path_entry_hash()?,
-        agent_info.agent_latest_pubkey,
+        agent_info.agent_initial_pubkey,
         LinkTypes::CloneProviders,
         (),
     )?;

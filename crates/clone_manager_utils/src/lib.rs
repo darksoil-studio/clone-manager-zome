@@ -154,8 +154,6 @@ pub async fn clone_cell(
                 role_name: role_to_clone,
                 modifiers: DnaModifiersOpt {
                     network_seed: Some(clone_request.dna_modifiers.network_seed.clone()),
-                    origin_time: Some(clone_request.dna_modifiers.origin_time),
-                    quantum_time: Some(clone_request.dna_modifiers.quantum_time),
                     properties: Some(properties.clone()),
                 },
                 membrane_proof: None,

@@ -15,7 +15,7 @@ import {
 } from '@holochain/client';
 import { encode } from '@msgpack/msgpack';
 import { pause, dhtSync, Player, Scenario } from '@holochain/tryorama';
-import { EntryRecord } from '@tnesh-stack/utils';
+import { EntryRecord } from '@darksoil-studio/holochain-utils';
 import { dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { CloneManagerClient } from '../../ui/src/clone-manager-client.js';

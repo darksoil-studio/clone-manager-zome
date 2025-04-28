@@ -2,7 +2,7 @@ import { css, html, LitElement } from 'lit';
 import { provide, consume } from '@lit/context';
 import { customElement, property } from 'lit/decorators.js';
 import { AppClient } from '@holochain/client';
-import { appClientContext } from '@tnesh-stack/elements';
+import { appClientContext } from '@darksoil-studio/holochain-elements';
 
 import { cloneManagerStoreContext } from '../context.js';
 import { CloneManagerStore } from '../clone-manager-store.js';

@@ -8,8 +8,8 @@ import {
   deletesForEntrySignal, 
   AsyncComputed,
   pipe,
-} from "@tnesh-stack/signals";
-import { slice, HashType, retype, EntryRecord, MemoHoloHashMap } from "@tnesh-stack/utils";
+} from "@darksoil-studio/holochain-signals";
+import { slice, HashType, retype, EntryRecord, MemoHoloHashMap } from "@darksoil-studio/holochain-utils";
 import { NewEntryAction, Record, ActionHash, EntryHash, AgentPubKey } from '@holochain/client';
 
 import { CloneManagerClient } from './clone-manager-client.js';
