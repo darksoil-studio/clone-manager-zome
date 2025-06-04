@@ -3,7 +3,6 @@ import {
 	ActionHash,
 	AgentPubKey,
 	AppBundleSource,
-	AppCallZomeRequest,
 	AppWebsocket,
 	EntryHash,
 	NewEntryAction,
@@ -35,10 +34,10 @@ export async function setup(scenario: Scenario, numPlayers = 2) {
 	// conductor of the scenario.
 	await scenario.shareAllAgents();
 
-	await dhtSync(
-		players.map(p => p.player),
-		players[0].player.cells[0].cell_id[0],
-	);
+	// await dhtSync(
+	// 	players.map(p => p.player),
+	// 	players[0].player.cells[0].cell_id[0],
+	// );
 
 	console.log('Setup completed!');
 
@@ -53,7 +52,6 @@ async function addPlayer(scenario: Scenario) {
 		},
 	});
 
-	patchCallZome(player.appWs as AppWebsocket);
 	await player.conductor
 		.adminWs()
 		.authorizeSigningCredentials(player.cells[0].cell_id);
@@ -72,7 +70,6 @@ async function addPlayer(scenario: Scenario) {
 					installed_app_id: player.appId,
 				});
 			const appWs = await player.conductor.connectAppWs(issued.token, port);
-			patchCallZome(appWs);
 			store.client.client = appWs;
 		},
 	};
@@ -86,23 +83,6 @@ async function promiseAllSequential<T>(
 		results.push(await promise());
 	}
 	return results;
-}
-
-function patchCallZome(appWs: AppWebsocket) {
-	const callZome = appWs.callZome;
-	appWs.callZome = async req => {
-		try {
-			const result = await callZome(req);
-			return result;
-		} catch (e) {
-			if (
-				!e.toString().includes('Socket is not open') &&
-				!e.toString().includes('ClientClosedWithPendingRequests')
-			) {
-				throw e;
-			}
-		}
-	};
 }
 
 export async function waitUntil(
