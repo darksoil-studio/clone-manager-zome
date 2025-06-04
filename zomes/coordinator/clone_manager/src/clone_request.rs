@@ -7,10 +7,11 @@ pub fn create_clone_request(clone_request: CloneRequest) -> ExternResult<Record>
     let record = get(clone_request_hash.clone(), GetOptions::default())?.ok_or(wasm_error!(
         WasmErrorInner::Guest("Could not find the newly created CloneRequest".to_string())
     ))?;
+    let entry_hash = hash_entry(clone_request)?;
     let path = Path::from("all_clone_requests");
     create_link(
         path.path_entry_hash()?,
-        clone_request_hash.clone(),
+        entry_hash.clone(),
         LinkTypes::AllCloneRequests,
         (),
     )?;
@@ -18,12 +19,15 @@ pub fn create_clone_request(clone_request: CloneRequest) -> ExternResult<Record>
 }
 
 #[hdk_extern]
-pub fn get_clone_request(clone_request_hash: ActionHash) -> ExternResult<Option<Record>> {
+pub fn get_clone_request(clone_request_hash: EntryHash) -> ExternResult<Option<CloneRequest>> {
     let Some(details) = get_details(clone_request_hash, GetOptions::default())? else {
         return Ok(None);
     };
     match details {
-        Details::Record(details) => Ok(Some(details.record)),
+        Details::Entry(details) => {
+            let entry = CloneRequest::try_from(details.entry)?;
+            Ok(Some(entry))
+        }
         _ => Err(wasm_error!(WasmErrorInner::Guest(
             "Malformed get details response".to_string()
         ))),
@@ -59,22 +63,22 @@ pub fn delete_clone_request(clone_request_hash: EntryHash) -> ExternResult<()> {
 
 #[hdk_extern]
 pub fn get_all_deletes_for_clone_request(
-    original_clone_request_hash: ActionHash,
+    original_clone_request_hash: EntryHash,
 ) -> ExternResult<Option<Vec<SignedActionHashed>>> {
     let Some(details) = get_details(original_clone_request_hash, GetOptions::default())? else {
         return Ok(None);
     };
     match details {
-        Details::Entry(_) => Err(wasm_error!(WasmErrorInner::Guest(
+        Details::Record(_) => Err(wasm_error!(WasmErrorInner::Guest(
             "Malformed details".into()
         ))),
-        Details::Record(record_details) => Ok(Some(record_details.deletes)),
+        Details::Entry(record_details) => Ok(Some(record_details.deletes)),
     }
 }
 
 #[hdk_extern]
 pub fn get_oldest_delete_for_clone_request(
-    original_clone_request_hash: ActionHash,
+    original_clone_request_hash: EntryHash,
 ) -> ExternResult<Option<SignedActionHashed>> {
     let Some(mut deletes) = get_all_deletes_for_clone_request(original_clone_request_hash)? else {
         return Ok(None);

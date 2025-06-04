@@ -7,12 +7,12 @@ import {
 	Delete,
 	DeleteLink,
 	EntryHash,
+	EntryHashB64,
 	Link,
-	Record,
 	SignedActionHashed,
 } from '@holochain/client';
 
-import { CloneManagerSignal } from './types.js';
+import { CloneManagerSignal, CloneRequest } from './types.js';
 
 export class CloneManagerClient extends ZomeClient<CloneManagerSignal> {
 	constructor(
@@ -21,5 +21,13 @@ export class CloneManagerClient extends ZomeClient<CloneManagerSignal> {
 		public zomeName = 'clone_manager',
 	) {
 		super(client, roleName, zomeName);
+	}
+
+	createCloneRequest(cloneRequest: CloneRequest) {
+		return this.callZome('create_clone_request', cloneRequest);
+	}
+
+	getAllCloneRequests(): Promise<Record<EntryHashB64, CloneRequest>> {
+		return this.callZome('get_all_clone_requests', undefined);
 	}
 }

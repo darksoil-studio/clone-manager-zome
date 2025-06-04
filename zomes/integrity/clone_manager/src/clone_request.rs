@@ -1,5 +1,5 @@
-use hdi::prelude::*;
 pub use clone_manager_types::CloneRequest;
+use hdi::prelude::*;
 
 pub fn validate_create_clone_request(
     _action: EntryCreationAction,
@@ -35,20 +35,17 @@ pub fn validate_create_link_all_clone_requests(
     target_address: AnyLinkableHash,
     _tag: LinkTag,
 ) -> ExternResult<ValidateCallbackResult> {
-    let action_hash =
-        target_address
-            .into_action_hash()
-            .ok_or(wasm_error!(WasmErrorInner::Guest(
-                "No action hash associated with link".to_string()
-            )))?;
-    let record = must_get_valid_record(action_hash)?;
-    let _clone_request: crate::CloneRequest = record
-        .entry()
-        .to_app_option()
-        .map_err(|e| wasm_error!(e))?
+    let entry_hash = target_address
+        .into_entry_hash()
         .ok_or(wasm_error!(WasmErrorInner::Guest(
-            "Linked action must reference an entry".to_string()
+            "No action hash associated with link".to_string()
         )))?;
+    let entry = must_get_entry(entry_hash)?;
+    let Ok(_clone_request) = crate::CloneRequest::try_from(entry.content) else {
+        return Ok(ValidateCallbackResult::Invalid(
+            "Linked action must reference an entry".to_string(),
+        ));
+    };
     // TODO: add the appropriate validation rules
     Ok(ValidateCallbackResult::Valid)
 }
