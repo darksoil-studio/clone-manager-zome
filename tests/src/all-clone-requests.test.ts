@@ -1,4 +1,4 @@
-import { pause, runScenario } from '@holochain/tryorama';
+import { dhtSync, pause, runScenario } from '@holochain/tryorama';
 import { encode } from '@msgpack/msgpack';
 import { assert, test } from 'vitest';
 
@@ -15,7 +15,7 @@ test('make service request', async () => {
 			},
 		});
 
-		await pause(5000);
+		await dhtSync([alice.player, bob.player], alice.player.cells[0].cell_id[0]);
 
 		const requests = await bob.store.client.getAllCloneRequests();
 

@@ -75,7 +75,14 @@ pub async fn reconcile_cloned_cells(
         }
     }
 
+    // Disable cells that are not longer requested to exist
+
     for cloned_cell in cloned_cells {
+        // If the cell is already disabled, we don't need to disable it again
+        if !cloned_cell.enabled {
+            continue;
+        }
+
         if clone_requests
             .values()
             .find(|clone_request| clone_request.dna_modifiers.eq(&cloned_cell.dna_modifiers))
@@ -103,10 +110,6 @@ pub fn dna_modifiers(cell: &CellInfo) -> DnaModifiers {
         CellInfo::Stem(stem) => stem.dna_modifiers.clone(),
     }
 }
-
-// async fn disable_clone() -> anyhow::Result<()> {
-
-// }
 
 pub async fn clone_cell(
     admin_ws: &AdminWebsocket,
