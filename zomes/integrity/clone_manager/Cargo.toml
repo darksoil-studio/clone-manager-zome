@@ -10,6 +10,7 @@ name = "clone_manager_integrity"
 [dependencies]
 hdi = { workspace = true }
 
+holochain_serialized_bytes = { workspace = true }
 serde = { workspace = true }
 
 clone_manager_types = { path = "../../../crates/clone_manager_types" }
