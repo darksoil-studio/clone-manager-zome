@@ -34,10 +34,10 @@ export async function setup(scenario: Scenario, numPlayers = 2) {
 	// conductor of the scenario.
 	await scenario.shareAllAgents();
 
-	// await dhtSync(
-	// 	players.map(p => p.player),
-	// 	players[0].player.cells[0].cell_id[0],
-	// );
+	await dhtSync(
+		players.map(p => p.player),
+		players[0].player.cells[0].cell_id[0],
+	);
 
 	console.log('Setup completed!');
 
