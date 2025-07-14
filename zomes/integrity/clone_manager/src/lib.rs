@@ -4,6 +4,10 @@ pub mod clone_request;
 pub use clone_request::*;
 pub mod clone_providers;
 pub use clone_providers::*;
+pub mod clone_provider_for_request;
+pub use clone_provider_for_request::*;
+
+pub use clone_manager_types::*;
 
 #[derive(Serialize, Deserialize)]
 #[serde(tag = "type")]
@@ -18,6 +22,7 @@ pub enum EntryTypes {
 pub enum LinkTypes {
     AllCloneRequests,
     CloneProviders,
+    CloneProviderForRequest,
 }
 
 // Validation you perform during the genesis process. Nobody else on the network performs it, only you.
@@ -59,22 +64,18 @@ pub fn validate(op: Op) -> ExternResult<ValidateCallbackResult> {
     match op.flattened::<EntryTypes, LinkTypes>()? {
         FlatOp::StoreEntry(store_entry) => match store_entry {
             OpEntry::CreateEntry { app_entry, action } => match app_entry {
-                EntryTypes::CloneRequest(clone_request) => {
-                    validate_create_clone_request(
-                        EntryCreationAction::Create(action),
-                        clone_request,
-                    )
-                }
+                EntryTypes::CloneRequest(clone_request) => validate_create_clone_request(
+                    EntryCreationAction::Create(action),
+                    clone_request,
+                ),
             },
             OpEntry::UpdateEntry {
                 app_entry, action, ..
             } => match app_entry {
-                EntryTypes::CloneRequest(clone_request) => {
-                    validate_create_clone_request(
-                        EntryCreationAction::Update(action),
-                        clone_request,
-                    )
-                }
+                EntryTypes::CloneRequest(clone_request) => validate_create_clone_request(
+                    EntryCreationAction::Update(action),
+                    clone_request,
+                ),
             },
             _ => Ok(ValidateCallbackResult::Valid),
         },
@@ -155,13 +156,11 @@ pub fn validate(op: Op) -> ExternResult<ValidateCallbackResult> {
                 }
             };
             match original_app_entry {
-                EntryTypes::CloneRequest(original_clone_request) => {
-                    validate_delete_clone_request(
-                        delete_entry.clone().action,
-                        original_action,
-                        original_clone_request,
-                    )
-                }
+                EntryTypes::CloneRequest(original_clone_request) => validate_delete_clone_request(
+                    delete_entry.clone().action,
+                    original_action,
+                    original_clone_request,
+                ),
             }
         }
         FlatOp::RegisterCreateLink {
@@ -171,15 +170,18 @@ pub fn validate(op: Op) -> ExternResult<ValidateCallbackResult> {
             tag,
             action,
         } => match link_type {
-            LinkTypes::AllCloneRequests => validate_create_link_all_clone_requests(
+            LinkTypes::AllCloneRequests => {
+                validate_create_link_all_clone_requests(action, base_address, target_address, tag)
+            }
+            LinkTypes::CloneProviders => {
+                validate_create_link_clone_providers(action, base_address, target_address, tag)
+            }
+            LinkTypes::CloneProviderForRequest => validate_create_link_clone_provider_for_request(
                 action,
                 base_address,
                 target_address,
                 tag,
             ),
-            LinkTypes::CloneProviders => {
-                validate_create_link_clone_providers(action, base_address, target_address, tag)
-            }
         },
         FlatOp::RegisterDeleteLink {
             link_type,
@@ -203,6 +205,13 @@ pub fn validate(op: Op) -> ExternResult<ValidateCallbackResult> {
                 target_address,
                 tag,
             ),
+            LinkTypes::CloneProviderForRequest => validate_delete_link_clone_provider_for_request(
+                action,
+                original_action,
+                base_address,
+                target_address,
+                tag,
+            ),
         },
         FlatOp::StoreRecord(store_record) => {
             match store_record {
@@ -210,12 +219,10 @@ pub fn validate(op: Op) -> ExternResult<ValidateCallbackResult> {
                 // If you want to optimize performance, you can remove the validation for an entry type here and keep it in `StoreEntry`
                 // Notice that doing so will cause `must_get_valid_record` for this record to return a valid record even if the `StoreEntry` validation failed
                 OpRecord::CreateEntry { app_entry, action } => match app_entry {
-                    EntryTypes::CloneRequest(clone_request) => {
-                        validate_create_clone_request(
-                            EntryCreationAction::Create(action),
-                            clone_request,
-                        )
-                    }
+                    EntryTypes::CloneRequest(clone_request) => validate_create_clone_request(
+                        EntryCreationAction::Create(action),
+                        clone_request,
+                    ),
                 },
                 // Complementary validation to the `RegisterUpdate` Op, in which the record itself is validated
                 // If you want to optimize performance, you can remove the validation for an entry type here and keep it in `StoreEntry` and in `RegisterUpdate`
@@ -245,23 +252,21 @@ pub fn validate(op: Op) -> ExternResult<ValidateCallbackResult> {
                                 clone_request.clone(),
                             )?;
                             if let ValidateCallbackResult::Valid = result {
-                                let original_clone_request: Option<CloneRequest> =
-                                    original_record
-                                        .entry()
-                                        .to_app_option()
-                                        .map_err(|e| wasm_error!(e))?;
-                                let original_clone_request =
-                                    match original_clone_request {
-                                        Some(clone_request) => clone_request,
-                                        None => {
-                                            return Ok(
+                                let original_clone_request: Option<CloneRequest> = original_record
+                                    .entry()
+                                    .to_app_option()
+                                    .map_err(|e| wasm_error!(e))?;
+                                let original_clone_request = match original_clone_request {
+                                    Some(clone_request) => clone_request,
+                                    None => {
+                                        return Ok(
                                             ValidateCallbackResult::Invalid(
                                                 "The updated entry type must be the same as the original entry type"
                                                     .to_string(),
                                             ),
                                         );
-                                        }
-                                    };
+                                    }
+                                };
                                 validate_update_clone_request(
                                     action,
                                     clone_request,
@@ -343,20 +348,26 @@ pub fn validate(op: Op) -> ExternResult<ValidateCallbackResult> {
                     link_type,
                     action,
                 } => match link_type {
-                    LinkTypes::AllCloneRequests => {
-                        validate_create_link_all_clone_requests(
-                            action,
-                            base_address,
-                            target_address,
-                            tag,
-                        )
-                    }
+                    LinkTypes::AllCloneRequests => validate_create_link_all_clone_requests(
+                        action,
+                        base_address,
+                        target_address,
+                        tag,
+                    ),
                     LinkTypes::CloneProviders => validate_create_link_clone_providers(
                         action,
                         base_address,
                         target_address,
                         tag,
                     ),
+                    LinkTypes::CloneProviderForRequest => {
+                        validate_create_link_clone_provider_for_request(
+                            action,
+                            base_address,
+                            target_address,
+                            tag,
+                        )
+                    }
                 },
                 // Complementary validation to the `RegisterDeleteLink` Op, in which the record itself is validated
                 // If you want to optimize performance, you can remove the validation for an entry type here and keep it in `RegisterDeleteLink`
@@ -386,15 +397,13 @@ pub fn validate(op: Op) -> ExternResult<ValidateCallbackResult> {
                         }
                     };
                     match link_type {
-                        LinkTypes::AllCloneRequests => {
-                            validate_delete_link_all_clone_requests(
-                                action,
-                                create_link.clone(),
-                                base_address,
-                                create_link.target_address,
-                                create_link.tag,
-                            )
-                        }
+                        LinkTypes::AllCloneRequests => validate_delete_link_all_clone_requests(
+                            action,
+                            create_link.clone(),
+                            base_address,
+                            create_link.target_address,
+                            create_link.tag,
+                        ),
                         LinkTypes::CloneProviders => validate_delete_link_clone_providers(
                             action,
                             create_link.clone(),
@@ -402,6 +411,15 @@ pub fn validate(op: Op) -> ExternResult<ValidateCallbackResult> {
                             create_link.target_address,
                             create_link.tag,
                         ),
+                        LinkTypes::CloneProviderForRequest => {
+                            validate_delete_link_clone_provider_for_request(
+                                action,
+                                create_link.clone(),
+                                base_address,
+                                create_link.target_address,
+                                create_link.tag,
+                            )
+                        }
                     }
                 }
                 OpRecord::CreatePrivateEntry { .. } => Ok(ValidateCallbackResult::Valid),

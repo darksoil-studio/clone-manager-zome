@@ -1,21 +1,20 @@
 use clone_manager_integrity::*;
 use hdk::prelude::*;
 
+use crate::utils::{create_link_relaxed, create_relaxed, delete_link_relaxed, delete_relaxed};
+
 #[hdk_extern]
-pub fn create_clone_request(clone_request: CloneRequest) -> ExternResult<Record> {
-    let clone_request_hash = create_entry(&EntryTypes::CloneRequest(clone_request.clone()))?;
-    let record = get(clone_request_hash.clone(), GetOptions::default())?.ok_or(wasm_error!(
-        WasmErrorInner::Guest("Could not find the newly created CloneRequest".to_string())
-    ))?;
-    let entry_hash = hash_entry(clone_request)?;
+pub fn create_clone_request(clone_request: CloneRequest) -> ExternResult<EntryHash> {
+    let entry_hash = hash_entry(&clone_request)?;
+    create_relaxed(EntryTypes::CloneRequest(clone_request))?;
     let path = Path::from("all_clone_requests");
-    create_link(
+    create_link_relaxed(
         path.path_entry_hash()?,
         entry_hash.clone(),
         LinkTypes::AllCloneRequests,
         (),
     )?;
-    Ok(record)
+    Ok(entry_hash)
 }
 
 #[hdk_extern]
@@ -44,7 +43,7 @@ pub fn delete_clone_request(clone_request_hash: EntryHash) -> ExternResult<()> {
     for link in links {
         if let Some(hash) = link.target.into_entry_hash() {
             if hash == clone_request_hash {
-                delete_link(link.create_link_hash)?;
+                delete_link_relaxed(link.create_link_hash)?;
             }
         }
     }
@@ -55,7 +54,7 @@ pub fn delete_clone_request(clone_request_hash: EntryHash) -> ExternResult<()> {
         return Err(wasm_error!("Clone request not found"));
     };
     for create in entry_details.actions {
-        delete_entry(create.hashed.hash)?;
+        delete_relaxed(create.hashed.hash)?;
     }
 
     Ok(())
