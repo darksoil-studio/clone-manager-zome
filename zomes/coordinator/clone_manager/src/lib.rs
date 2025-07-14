@@ -3,8 +3,8 @@ use clone_manager_types::NewCloneRequest;
 use hdk::prelude::*;
 
 pub mod all_clone_requests;
-pub mod clone_provided_for_request;
 pub mod clone_providers;
+pub mod clone_providers_for_request;
 pub mod clone_request;
 mod utils;
 use clone_providers::{announce_as_provider, get_clone_providers};
