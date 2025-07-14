@@ -69,15 +69,15 @@ pub fn post_commit(committed_actions: Vec<SignedActionHashed>) {
 
 fn signal_action(action: SignedActionHashed) -> ExternResult<()> {
     match action.hashed.content.clone() {
-        Action::Create(_create) => {
+        Action::Create(create) => {
             if let Ok(Some(app_entry)) = get_entry_for_action(&action.hashed.hash) {
                 match &app_entry {
-                    EntryTypes::CloneRequest(clone_request) => {
+                    EntryTypes::CloneRequest(_clone_request) => {
                         let providers = get_clone_providers(())?;
                         info!("New CloneRequest created: sending to providers: {providers:?}.");
                         send_remote_signal(
                             NewCloneRequest {
-                                clone_request: clone_request.clone(),
+                                clone_request_hash: create.entry_hash,
                             },
                             providers,
                         )?;

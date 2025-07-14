@@ -8,7 +8,7 @@ pub struct CloneRequest {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct NewCloneRequest {
-    pub clone_request: CloneRequest,
+    pub clone_request_hash: EntryHash,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
