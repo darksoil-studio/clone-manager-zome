@@ -1,6 +1,8 @@
 use clone_manager_integrity::LinkTypes;
 use hdk::prelude::*;
 
+use crate::utils::{create_cap_grant_relaxed, create_link_relaxed};
+
 fn all_providers_path() -> Path {
     Path::from(format!("all_providers"))
 }
@@ -17,7 +19,7 @@ pub fn announce_as_provider() -> ExternResult<()> {
 
     let path = all_providers_path();
 
-    create_link(
+    create_link_relaxed(
         path.path_entry_hash()?,
         agent_info.agent_initial_pubkey,
         LinkTypes::CloneProviders,
@@ -32,7 +34,7 @@ pub fn announce_as_provider() -> ExternResult<()> {
         (zome_info()?.name, FunctionName::from("recv_remote_signal")),
     ]));
 
-    create_cap_grant(CapGrantEntry {
+    create_cap_grant_relaxed(CapGrantEntry {
         tag: "clone_manager_provider".into(),
         // empty access converts to unrestricted
         access: CapAccess::Unrestricted,

@@ -11,3 +11,8 @@ pub struct NewCloneRequest {
     pub clone_request: CloneRequest,
 }
 
+#[derive(Serialize, Deserialize, Debug)]
+pub struct CloneRequestWithDeleted {
+    pub clone_request: CloneRequest,
+    pub deleted: bool,
+}
