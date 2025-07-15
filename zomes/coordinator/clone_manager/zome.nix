@@ -3,14 +3,14 @@
 {
   perSystem = { inputs', system, self', ... }: rec {
     packages.clone_manager =
-      inputs.holochain-nix-builders.outputs.builders.${system}.rustZome {
+      inputs.holochain-utils.outputs.builders.${system}.rustZome {
         workspacePath = inputs.self.outPath;
         crateCargoToml = ./Cargo.toml;
         excludedCrates = [ "clone_manager_utils" ];
       };
 
     builders.clone_manager = { provider }:
-      inputs.holochain-nix-builders.outputs.builders.${system}.rustZome {
+      inputs.holochain-utils.outputs.builders.${system}.rustZome {
         workspacePath = inputs.self.outPath;
         crateCargoToml = ./Cargo.toml;
         excludedCrates = [ "clone_manager_utils" ];
