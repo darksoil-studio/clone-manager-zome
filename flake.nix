@@ -10,9 +10,6 @@
     scaffolding.url = "github:darksoil-studio/scaffolding/main-0.5";
     holochain-nix-builders.url =
       "github:darksoil-studio/holochain-nix-builders/main-0.5";
-    playground.url = "github:darksoil-studio/holochain-playground/main-0.5";
-    tauri-plugin-holochain.url =
-      "github:darksoil-studio/tauri-plugin-holochain/main-0.5";
   };
 
   nixConfig = {
@@ -48,8 +45,6 @@
           packages = [
             inputs'.holochain-nix-builders.packages.holochain
             inputs'.scaffolding.packages.hc-scaffold-zome
-            inputs'.playground.packages.hc-playground
-            inputs'.tauri-plugin-holochain.packages.hc-pilot
           ];
         };
         devShells.npm-ci = inputs'.scaffolding.devShells.synchronized-pnpm;
