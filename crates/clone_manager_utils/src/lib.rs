@@ -130,44 +130,46 @@ pub async fn reconcile_cloned_cells(
     // Disable cells that are not longer requested to exist
 
     for cloned_cell in cloned_cells {
+        if clone_requests
+            .values()
+            .find(|clone_request| clone_request.dna_modifiers.eq(&cloned_cell.dna_modifiers))
+            .is_some()
+        {
+            continue;
+        }
+
         // If the cell is already disabled, we don't need to disable it again
         if !cloned_cell.enabled {
             continue;
         }
 
-        if clone_requests
-            .values()
-            .find(|clone_request| clone_request.dna_modifiers.eq(&cloned_cell.dna_modifiers))
-            .is_none()
-        {
-            log::info!(
-                "CloneRequest for role {} with DNA hash {} and modifiers {:?} does not longer exist. Disabling the cell.",
-                role_to_clone, cloned_cell.cell_id.dna_hash(), cloned_cell.dna_modifiers
-            );
-            app_ws
-                .disable_clone_cell(DisableCloneCellPayload {
-                    clone_cell_id: CloneCellId::CloneId(cloned_cell.clone_id),
-                })
-                .await?;
+        log::info!(
+            "CloneRequest for role {} with DNA hash {} and modifiers {:?} does not longer exist. Disabling the cell.",
+            role_to_clone, cloned_cell.cell_id.dna_hash(), cloned_cell.dna_modifiers
+        );
 
-            let entry_hashed = EntryHashed::from_content_sync(Entry::app(
-                SerializedBytes::try_from(CloneRequest {
-                    dna_modifiers: cloned_cell.dna_modifiers,
-                })?,
-            )?);
+        app_ws
+            .disable_clone_cell(DisableCloneCellPayload {
+                clone_cell_id: CloneCellId::CloneId(cloned_cell.clone_id),
+            })
+            .await?;
 
-            // TODO: be careful when adding more properties to CloneRequest:
-            // can the EntryHash be computed on the fly and passed in as an input to `delete_clone_provided_for_request()`?
-            let _r: () = app_ws
-                .call_zome(
-                    ZomeCallTarget::RoleName(clone_manager_zome_role.clone()),
-                    "clone_manager".into(),
-                    "retract_as_clone_provider_for_request".into(),
-                    ExternIO::encode(entry_hashed.hash)?,
-                )
-                .await?
-                .decode()?;
-        }
+        let entry_hashed =
+            EntryHashed::from_content_sync(Entry::app(SerializedBytes::try_from(CloneRequest {
+                dna_modifiers: cloned_cell.dna_modifiers,
+            })?)?);
+
+        // TODO: be careful when adding more properties to CloneRequest:
+        // can the EntryHash be computed on the fly and passed in as an input to `delete_clone_provided_for_request()`?
+        let _r: () = app_ws
+            .call_zome(
+                ZomeCallTarget::RoleName(clone_manager_zome_role.clone()),
+                "clone_manager".into(),
+                "retract_as_clone_provider_for_request".into(),
+                ExternIO::encode(entry_hashed.hash)?,
+            )
+            .await?
+            .decode()?;
     }
 
     Ok(())
